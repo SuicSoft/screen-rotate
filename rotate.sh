@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2016 SuicSoft / SuiciStudios(tm).
+# Copyright (c) 2016 SuicSoft.
 
 # Author : Suici Doga (suiciwd@gmail.com , suiciwd@gmail.com)  / contributors
 
@@ -23,18 +23,20 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Screen Rotate.  If not, see <http://www.gnu.org/licenses/>.
 
-ACCEL=$(cut -d "," -f 2 <<< cat /sys/devices/platform/lis3lv02d/position) #Read the accelerometer data
 
-if (($ACCEL > 700 )); then 
-   echo right
-   xrandr --output LVDS --rotate right #Rotate screen right
+#Read the accelerometer data
+ACCEL_RAW=$(cut -d "," -f 2 /sys/devices/platform/lis3lv02d/position)
+ACCEL=$(echo $ACCEL_RAW | sed 's/-//g')
+if (($ACCEL > 700 )); then
+    # This position could be left or right so we have to check using the raw accelerometer value
+    if [[ $ACCEL_RAW = \-* ]] ; then # If it starts with minus it is a negative
+        echo left
+        xrandr --output LVDS --rotate left # Rotate screen left
+    else
+        echo right
+        xrandr --output LVDS --rotate right # Rotate screen right
+    fi  
 elif (($ACCEL < 300 ));then
-   echo normal
-   xrandr --output LVDS --rotate normal #Rotate screen normal
-elif (($ACCEL > -300 ));then
-   echo normal
-   xrandr --output LVDS --rotate normal #Rotate screen normal
-elif (($ACCEL < -700 ));then
-   echo left
-   xrandr --output LVDS --rotate left #Rotate screen left
+    echo normal
+    xrandr --output LVDS --rotate normal # Rotate screen normal
 fi
